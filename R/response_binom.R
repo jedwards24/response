@@ -58,7 +58,7 @@ response_binom <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE
 
   mean_all <- mean(targ_vec)
 
-  dt_summ <- dt %>%
+  dt_res <- dt %>%
     dplyr::group_by(.data$var) %>%
     dplyr::summarise(n = dplyr::n(),
                      n_pos = sum(.data$target),
@@ -76,12 +76,19 @@ response_binom <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE
     dplyr::filter(.data$n >= min_n) %>%
     purrr::when(!show_all ~ filter(., .data$sig != "none"), ~.) %>%
     purrr::when(order_n ~ dplyr::arrange(., dplyr::desc(.data$n)), ~dplyr::arrange(., .data$value))
+  # attr(dt_summ, "response_classes") <- response_classes
+  # attr(dt_summ, "pos_class_supplied") <- !is.null(pos_class)
+  # attr(dt_summ, "mean_all") <- mean_all
+  # attr(dt_summ, "y_label") <- y_label
+  dt_res <- structure(dt_res,
+                      response_classes = response_classes,
+                      pos_class_supplied = !is.null(pos_class),
+                      mean_all = mean_all,
+                      y_label = y_label)
   if (plot){
-    print(plot_response(dt_summ, order_n = order_n))
+    print(plot_response(dt_res, order_n = order_n))
   }
-  attr(dt_summ, "response_classes") <- response_classes
-  attr(dt_summ, "pos_class_supplied") <- !is.null(pos_class)
-  dt_summ
+  dt_res
 }
 
 prepare_binomial_response <- function(x, pos_class = NULL) {
@@ -106,19 +113,20 @@ pos_class_message <- function(classes) {
 
 #' @param prop_lim Optional x axis limits passed to `ggplot()` e.g. `c(0,1)`.
 #'
-plot_response <- function(repsonse_dt, order_n = FALSE, prop_lim  = NULL) {
+plot_response <- function(dt, order_n = FALSE, prop_lim  = NULL) {
+  mean_all <- attr(dt, "mean_all")
   if (order_n){
-    reponse_dt <- dplyr::mutate(response_dt, value = stats::reorder(.data$value, .data$n))
+    reponse_dt <- dplyr::mutate(dt, value = stats::reorder(.data$value, .data$n))
   }
   cols <- c("#F8766D", "#00BA38", "#619CFF")
-  gg <- response_dt %>%
+  gg <- dt %>%
     ggplot2::ggplot(aes(x = .data$value, y = .data$prop, color = .data$sig)) +
     ggplot2::geom_point() +
     ggplot2::geom_errorbar(aes(ymin = .data$lo, ymax = .data$hi)) +
     ggplot2::coord_flip() +
     ggplot2::geom_hline(yintercept = mean_all, linetype = 2) +
     ggplot2::ylab("Mean Proportion Target") +
-    ggplot2::xlab(y_label) +
+    ggplot2::xlab(attr(dt, "y_label")) +
     ggplot2::theme(legend.position = "none") +
     ggplot2::scale_colour_manual(values = c("lo" = cols[1], "none" = cols[3], "hi" = cols[2])) +
     {if(all(!is.null(prop_lim))) ggplot2::ylim(prop_lim[1], prop_lim[2])}

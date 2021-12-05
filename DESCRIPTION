@@ -10,3 +10,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 URL: https://github.com/jedwards24/response
 BugReports: https://github.com/jedwards24/response/issues
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
