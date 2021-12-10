@@ -45,7 +45,7 @@ response_binom <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE
 
   targ_vec <- prepare_binomial_response(dt$target, pos_class = pos_class)
   response_classes <- attr(targ_vec, "response_classes")
-  if (is.null(pos_class)) pos_class_message(response_classes)
+  if (is.null(pos_class)) message(pos_class_message(response_classes))
   attributes(targ_vec) <- NULL
   dt <- dplyr::mutate(dt, target = targ_vec)
 
@@ -105,10 +105,10 @@ prepare_binomial_response <- function(x, pos_class = NULL) {
 }
 
 pos_class_message <- function(classes) {
-  message("Argument `pos_class` not supplied. Treating:")
-  message("  * ", glue::double_quote(classes[1]), " as positive class (1).")
-  message("  * ", glue::double_quote(classes[2]), " as other class (0).")
-  message("Use `pos_class` argument to set different value for positive class.")
+  paste0("Argument `pos_class` not supplied. Treating:\n",
+  "  * ", glue::double_quote(classes[1]), " as positive class (1).\n",
+  "  * ", glue::double_quote(classes[2]), " as other class (0).\n",
+  "Use `pos_class` argument to set different value for positive class.")
 }
 
 #' @param prop_lim Optional x axis limits passed to `ggplot()` e.g. `c(0,1)`.

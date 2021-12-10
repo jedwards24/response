@@ -47,7 +47,7 @@ test_that("response_binom handles inputs", {
   expect_identical(suppressMessages(response_binom(tb, "outbf", "group", pos_class = "TRUE", plot = FALSE)), ref)
   expect_identical(suppressMessages(response_binom(tb, "outc", "group", pos_class = "yes", plot = FALSE)), ref)
   expect_false(identical(suppressMessages(response_binom(tb, "outc", "group", plot = FALSE)), ref))
-  expect_message(response_binom(tb, "outc", "group", plot = FALSE), "Treating")
+  expect_message(response_binom(tb, "outc", "group", plot = FALSE), "Treating.*value for positive class.")
   # next tests predictor var as factor. Not identical since "value" in returned df is factor
   #expect_identical(response_binom(tb, "outcome", "groupf"), ref)
   tb2 <- tibble::add_row(tb, group = "c", outcome = 2)
