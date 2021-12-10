@@ -22,7 +22,7 @@
 #' @param show_all Logical. Defaults to `TRUE`. If `FALSE` will not show levels whose confidence interval
 #'   overlaps the mean response of all observations.
 #' @param order_n Logical. Whether to force plot and table to order by number of observations of the
-#'   predictior. The default setting `NULL` retains ordering if predictor is numeric or ordered factor
+#'   predictor. The default setting `NULL` retains ordering if predictor is numeric or ordered factor
 #'   and orders by number of observations otherwise.
 #' @param conf_level Numeric in (0,1). Confidence level used for confidence intervals.
 #' @param pos_class Optional. Specify value in target to associate with class 1.
@@ -30,7 +30,8 @@
 #'
 #' @export
 response_binom <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, order_n = NULL,
-                    conf_level = 0.95, pos_class = NULL, plot = TRUE) {
+                    conf_level = 0.95, pos_class = NULL, plot = TRUE,
+                    family = "binomial") {
   if (!is.data.frame(dt)){
     stop("`dt` must be a data frame.", call. = FALSE)
   }
@@ -43,11 +44,18 @@ response_binom <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE
     message("There are NA values in target variable. These rows will be excluded from any calculations.")
   }
 
-  targ_vec <- prepare_binomial_response(dt$target, pos_class = pos_class)
-  response_classes <- attr(targ_vec, "response_classes")
-  if (is.null(pos_class)) message(pos_class_message(response_classes))
-  attributes(targ_vec) <- NULL
-  dt <- dplyr::mutate(dt, target = targ_vec)
+  if (family == "guassian"){
+    if (!(is.numeric(dt$target) | is.logical(dt$target))) {
+      stop("Target variable must be numeric or logical", call. = FALSE)
+    }
+  }
+
+  if (family == "binomial"){
+    dt <- dplyr::mutate(dt, target = prepare_binomial_response(dt$target, pos_class = pos_class))
+    response_classes <- attr(dt$target, "response_classes")
+    attr(dt$target, "response_classes") <- NULL
+    if (is.null(pos_class)) message(pos_class_message(response_classes))
+  }
 
   if (is.factor(dt$var) && !("(Missing)" %in% dt$var)){
     dt <- dplyr::mutate(dt, var = forcats::fct_explicit_na(.data$var))
@@ -56,37 +64,45 @@ response_binom <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE
     order_n <- if (is.numeric(dt$var) || is.ordered(dt$var)) FALSE else TRUE
   }
 
-  mean_all <- mean(targ_vec)
+  mean_all <- mean(dt$target)
 
-  dt_res <- dt %>%
+  res <- dt %>%
     dplyr::group_by(.data$var) %>%
     dplyr::summarise(n = dplyr::n(),
                      n_pos = sum(.data$target),
-                     prop = mean(.data$target)) %>%
+                     prop = mean(.data$target),
+                     mean_response = mean(.data$target),
+                     sd = sd(.data$target)) %>%
     dplyr::rename(value = .data$var) %>%
-    dplyr::arrange(dplyr::desc(.data$n)) %>%
-    dplyr::mutate(lo = binom::binom.wilson(.data$prop * .data$n, .data$n, conf.level = conf_level)[['lower']],
-                  hi = binom::binom.wilson(.data$prop * .data$n, .data$n, conf.level = conf_level)[['upper']],
-                  sig = dplyr::case_when(
+    dplyr::filter(.data$n >= min_n)
+
+  res <- res %>%
+    ci_add(conf_level = conf_level, family = family) %>%
+    dplyr::mutate(sig = dplyr::case_when(
                     .data$lo > mean_all ~ 3,
                     .data$hi < mean_all ~ 1,
                     T ~ 2),
                   sig = factor(.data$sig, levels = c(1, 2, 3), labels = c("lo", "none", "hi"))
     ) %>%
-    dplyr::filter(.data$n >= min_n) %>%
     purrr::when(!show_all ~ filter(., .data$sig != "none"), ~.) %>%
     purrr::when(order_n ~ dplyr::arrange(., dplyr::desc(.data$n)), ~dplyr::arrange(., .data$value))
-  dt_res <- structure(dt_res,
-                      response_classes = response_classes,
-                      pos_class_supplied = !is.null(pos_class),
-                      mean_all = mean_all,
-                      y_label = y_label)
-  if (plot){
-    print(plot_response(dt_res, order_n = order_n))
+
+  if (family == "binomial"){
+    res <- structure(res,
+                     response_classes = response_classes,
+                     pos_class_supplied = !is.null(pos_class),
+                     mean_all = mean_all,
+                     y_label = y_label)
   }
-  dt_res
+  if (plot){
+    print(plot_response(res, order_n = order_n))
+  }
+  res
 }
 
+#' @param x Target variable vector.
+#' @param pos_class A value in `x` to use as the positive class.
+#' @keywords internal
 prepare_binomial_response <- function(x, pos_class = NULL) {
   if (length(na.omit(unique(x))) != 2L){
     stop("Target variable must be binary.", call. = FALSE)
@@ -108,6 +124,8 @@ prepare_binomial_response <- function(x, pos_class = NULL) {
   x
 }
 
+#' @param classes Length two vector with positive class first.
+#' @keywords internal
 pos_class_message <- function(classes) {
   paste0("Argument `pos_class` not supplied. Treating:\n",
   "  * ", glue::double_quote(classes[1]), " as positive class (1).\n",
@@ -135,4 +153,27 @@ plot_response <- function(dt, order_n = FALSE, prop_lim  = NULL) {
     ggplot2::scale_colour_manual(values = c("lo" = cols[1], "none" = cols[3], "hi" = cols[2])) +
     {if(all(!is.null(prop_lim))) ggplot2::ylim(prop_lim[1], prop_lim[2])}
   gg
+}
+
+ci_add <- function(dt, conf_level, family) {
+  if (family == "binomial"){
+    binom <- binom::binom.wilson(dt$prop * dt$n, dt$n, conf.level = conf_level)
+    return(dplyr::mutate(dt,
+                         lo = binom[["lower"]],
+                         hi = binom[["upper"]])
+    )
+  }
+  if (family == "guassian"){
+    dplyr::mutate(dt,
+                  lo = ci_t(.data$mean_response, .data$sd, .data$n, ci = conf_level, lower = TRUE),
+                  hi = ci_t(.data$mean_response, .data$sd, .data$n, ci = conf_level, lower = FALSE))
+  }
+}
+
+# t-distribution based confidence interval using summary statistics as input.
+ci_t <- function (mean, sd, n, ci = 0.95, lower = TRUE){
+  quan <- ci + (1 - ci)/2
+  margin_error <- qt(quan, df = n - 1) * sd / sqrt(n)
+  if (lower) return(mean - margin_error)
+  mean + margin_error
 }
