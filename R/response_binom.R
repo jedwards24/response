@@ -76,10 +76,6 @@ response_binom <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE
     dplyr::filter(.data$n >= min_n) %>%
     purrr::when(!show_all ~ filter(., .data$sig != "none"), ~.) %>%
     purrr::when(order_n ~ dplyr::arrange(., dplyr::desc(.data$n)), ~dplyr::arrange(., .data$value))
-  # attr(dt_summ, "response_classes") <- response_classes
-  # attr(dt_summ, "pos_class_supplied") <- !is.null(pos_class)
-  # attr(dt_summ, "mean_all") <- mean_all
-  # attr(dt_summ, "y_label") <- y_label
   dt_res <- structure(dt_res,
                       response_classes = response_classes,
                       pos_class_supplied = !is.null(pos_class),
@@ -94,6 +90,14 @@ response_binom <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE
 prepare_binomial_response <- function(x, pos_class = NULL) {
   if (length(na.omit(unique(x))) != 2L){
     stop("Target variable must be binary.", call. = FALSE)
+  }
+  if (!is.null(pos_class)){
+    if (!is.atomic(pos_class) || !length(pos_class) == 1L){
+      stop("`pos_class` must be length 1 and atomic.", .call = FALSE)
+    }
+    if (!pos_class %in% x){
+      stop("`pos_class` must match a value in the target vector.", .call = FALSE)
+    }
   }
   if (is.null(pos_class)){
     pos_class <- if (is.ordered(x)) levels(x)[2] else sort(unique(as.vector(x)))[2]

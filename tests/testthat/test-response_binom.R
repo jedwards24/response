@@ -7,6 +7,7 @@ test_that("prepare_binomial_response works", {
   y6 <- prepare_binomial_response(c("N", "Y"))
   y7 <- prepare_binomial_response(factor(c("N", "Y")))
   y8 <- prepare_binomial_response(factor(c("N", "Y"), levels = c("Y", "N"), ordered = TRUE))
+  y9 <- prepare_binomial_response(1:2, pos_class = 1L)
 
   t1 <- c(TRUE, FALSE)
   t2 <- c(FALSE, TRUE)
@@ -18,7 +19,10 @@ test_that("prepare_binomial_response works", {
   expect_equal(as.vector(y6), t2)
   expect_equal(as.vector(y7), t2)
   expect_equal(as.vector(y8), t1)
+  expect_equal(as.vector(y8), t1)
   expect_equal(as.vector(prepare_binomial_response(c(2, 1, 2))), c(TRUE, FALSE, TRUE))
+  expect_error(prepare_binomial_response(1:2, pos_class = 3L))
+  expect_error(prepare_binomial_response(factor(5:6), pos_class = 3L))
 })
 
 tb <- tibble::tibble(group = c(rep("a", 25), rep("b", 15), rep("c", 10)),
