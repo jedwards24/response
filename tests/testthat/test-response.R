@@ -32,46 +32,46 @@ tb <- tibble::tibble(group = c(rep("a", 25), rep("b", 15), rep("c", 10)),
   dplyr::mutate(outb = as.logical(outcome)) %>%
   dplyr::mutate(outbf = factor(outb)) %>%
   dplyr::mutate(outc = ifelse(outb, "yes", "no"))
-ref <- suppressMessages(response_binom(tb, "outcome", "group", plot = FALSE))
+ref <- suppressMessages(response(tb, "outcome", "group", plot = FALSE))
 
-test_that("response_binom works", {
+test_that("binom works", {
   expect_s3_class(ref, "data.frame")
-  #  expect_s3_class(suppressMessages(response_binom(tb, "outcome", "group", return_plot = TRUE)), "ggplot")
+  #  expect_s3_class(suppressMessages(response(tb, "outcome", "group", return_plot = TRUE)), "ggplot")
   expect_identical(nrow(ref), length(unique(tb$group)))
   expect_true(all(ref$prop >= 0 & ref$prop <= 1))
   expect_true(all(ref$lo <= ref$prop))
   expect_true(all(ref$hi >= ref$prop))
 })
 
-test_that("response_binom() handles inputs", {
+test_that("response() handles inputs", {
   #ignore attribute differences here
   attr(ref, "waldo_opts") <- list(ignore_attr = TRUE)
-  expect_identical(suppressMessages(response_binom(tb, "outf", "group", plot = FALSE)), ref)
-  expect_identical(suppressMessages(response_binom(tb, "outb", "group", plot = FALSE)), ref)
-  expect_identical(suppressMessages(response_binom(tb, "outbf", "group", pos_class = "TRUE", plot = FALSE)), ref)
-  expect_identical(suppressMessages(response_binom(tb, "outc", "group", pos_class = "yes", plot = FALSE)), ref)
-  expect_false(identical(suppressMessages(response_binom(tb, "outc", "group", plot = FALSE)), ref))
-  expect_message(response_binom(tb, "outc", "group", plot = FALSE), "Treating.*value for positive class.")
+  expect_identical(suppressMessages(response(tb, "outf", "group", plot = FALSE)), ref)
+  expect_identical(suppressMessages(response(tb, "outb", "group", plot = FALSE)), ref)
+  expect_identical(suppressMessages(response(tb, "outbf", "group", pos_class = "TRUE", plot = FALSE)), ref)
+  expect_identical(suppressMessages(response(tb, "outc", "group", pos_class = "yes", plot = FALSE)), ref)
+  expect_false(identical(suppressMessages(response(tb, "outc", "group", plot = FALSE)), ref))
+  expect_message(response(tb, "outc", "group", plot = FALSE), "Treating.*value for positive class.")
   # next tests predictor var as factor. Not identical since "value" in returned df is factor
-  #expect_identical(response_binom(tb, "outcome", "groupf"), ref)
+  #expect_identical(response(tb, "outcome", "groupf"), ref)
   tb2 <- tibble::add_row(tb, group = "c", outcome = 2)
-  expect_error(suppressMessages(response_binom(tb2, "outcome", "group", plot = FALSE)), "Target variable must be binary.")
+  expect_error(suppressMessages(response(tb2, "outcome", "group", plot = FALSE)), "Target variable must be binary.")
 })
 
-test_that("response_binom() output matches snapshot", {
+test_that("response() output matches snapshot", {
   set.seed(13)
   a <- rbinom(30, 1, 0.1)
   b <- rbinom(55, 1, 0.25)
   c <- rbinom(15, 1, 0.7)
   df <- data.frame(x = c(rep("A", 30), rep("B", 55), rep("C", 15)),
                    y = c(a, b, c))
-  tt <- response_binom(df, y, x, pos_class = 1L, plot = FALSE)
+  tt <- response(df, y, x, pos_class = 1L, plot = FALSE)
   expect_true(all(c("pos_class_supplied", "response_classes", "mean_all") %in% names(attributes(tt))))
   expect_named(attributes(tt),
                c("pos_class_supplied", "response_classes", "mean_all", "class",
                  "row.names", "names", "y_label"),
                ignore.order = TRUE)
   expect_snapshot_value(tt, style = "serialize")
-  expect_identical(response_binom(df, y, x, pos_class = 1L, plot = FALSE, order_n = FALSE)[[1]],
+  expect_identical(response(df, y, x, pos_class = 1L, plot = FALSE, order_n = FALSE)[[1]],
                    c("A", "B", "C"))
 })

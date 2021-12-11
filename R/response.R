@@ -27,9 +27,11 @@
 #' @param conf_level Numeric in (0,1). Confidence level used for confidence intervals.
 #' @param pos_class Optional. Specify value in target to associate with class 1.
 #' @param plot Optional logical. Output a plot or not.
+#' @param family Distribution family to use for the response confidence interval. Either "binomial
+#'   or "gaussian".
 #'
 #' @export
-response_binom <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, order_n = NULL,
+response <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, order_n = NULL,
                     conf_level = 0.95, pos_class = NULL, plot = TRUE,
                     family = "binomial") {
   if (!is.data.frame(dt)){
@@ -44,7 +46,7 @@ response_binom <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE
     message("There are NA values in target variable. These rows will be excluded from any calculations.")
   }
 
-  if (family == "guassian"){
+  if (family == "gaussian"){
     if (!(is.numeric(dt$target) | is.logical(dt$target))) {
       stop("Target variable must be numeric or logical", call. = FALSE)
     }
@@ -163,7 +165,7 @@ ci_add <- function(dt, conf_level, family) {
                          hi = binom[["upper"]])
     )
   }
-  if (family == "guassian"){
+  if (family == "gaussian"){
     dplyr::mutate(dt,
                   lo = ci_t(.data$mean_response, .data$sd, .data$n, ci = conf_level, lower = TRUE),
                   hi = ci_t(.data$mean_response, .data$sd, .data$n, ci = conf_level, lower = FALSE))
