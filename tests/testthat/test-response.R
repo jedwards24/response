@@ -69,7 +69,7 @@ test_that("response() output matches snapshot", {
   expect_true(all(c("pos_class_supplied", "response_classes", "mean_all") %in% names(attributes(tt))))
   expect_named(attributes(tt),
                c("pos_class_supplied", "response_classes", "mean_all", "class",
-                 "row.names", "names", "y_label"),
+                 "row.names", "names", "target_name", "grouping_name"),
                ignore.order = TRUE)
   expect_snapshot_value(tt, style = "serialize")
   expect_identical(response(df, y, x, pos_class = 1L, plot = FALSE, order_n = FALSE)[[1]],

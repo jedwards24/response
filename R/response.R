@@ -27,7 +27,7 @@
 #' @param conf_level Numeric in (0,1). Confidence level used for confidence intervals.
 #' @param pos_class Optional. Specify value in target to associate with class 1.
 #' @param plot Optional logical. Output a plot or not.
-#' @param family Distribution family to use for the response confidence interval. Either "binomial
+#' @param family Distribution family to use for the response confidence interval. Either "binomial"
 #'   or "gaussian".
 #'
 #' @export
@@ -37,7 +37,7 @@ response <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, orde
   if (!is.data.frame(dt)){
     stop("`dt` must be a data frame.", call. = FALSE)
   }
-  y_label <- names(dplyr::select(dt, {{ var_name }})) #for plot
+  col_names <- names(dplyr::select(dt, {{ target_name }}, {{ var_name }})) # to save as strings
   dt <- dplyr::rename(dt,
                       target = {{ target_name }},
                       var = {{ var_name }})
@@ -91,10 +91,11 @@ response <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, orde
 
   if (family == "binomial"){
     res <- structure(res,
+                     target_name = col_names[1],
+                     grouping_name = col_names[2],
                      response_classes = response_classes,
                      pos_class_supplied = !is.null(pos_class),
-                     mean_all = mean_all,
-                     y_label = y_label)
+                     mean_all = mean_all)
   }
   if (plot){
     print(plot_response(res, order_n = order_n))
@@ -150,7 +151,7 @@ plot_response <- function(dt, order_n = FALSE, prop_lim  = NULL) {
     ggplot2::coord_flip() +
     ggplot2::geom_hline(yintercept = mean_all, linetype = 2) +
     ggplot2::ylab("Mean Proportion Target") +
-    ggplot2::xlab(attr(dt, "y_label")) +
+    ggplot2::xlab(attr(dt, "target_name")) +
     ggplot2::theme(legend.position = "none") +
     ggplot2::scale_colour_manual(values = c("lo" = cols[1], "none" = cols[3], "hi" = cols[2])) +
     {if(all(!is.null(prop_lim))) ggplot2::ylim(prop_lim[1], prop_lim[2])}
