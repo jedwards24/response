@@ -71,7 +71,7 @@ test_that("response() output matches snapshot", {
                c("pos_class_supplied", "response_classes", "mean_all", "class",
                  "row.names", "names", "target_name", "grouping_name"),
                ignore.order = TRUE)
-  expect_snapshot_value(tt, style = "serialize")
+  expect_snapshot_value(tt, style = "json2")
   expect_identical(response(df, y, x, pos_class = 1L, plot = FALSE, order_n = FALSE)[[1]],
                    c("A", "B", "C"))
 })

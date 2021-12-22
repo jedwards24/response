@@ -22,8 +22,6 @@ devtools::install_github("jedwards24/response")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
-
 ``` r
 library(response)
 set.seed(13)

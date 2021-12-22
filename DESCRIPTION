@@ -1,9 +1,12 @@
 Package: response
-Title: What the Package Does (One Line, Title Case)
+Title: Mean and Confidence Intervals of a Response Variable by Group
 Version: 0.0.0.9000
 Authors@R: 
     person("James", "Edwards", , "jamese1326@gmail.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Description: Gives mean and confidence intervals of a response variable by groups of an 
+    input variable. The response can be numeric with confidence intervals calculated 
+    using Gaussian assumptions, or if the response has two classes then a binomial c
+    confidence interval can be used.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

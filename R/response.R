@@ -96,7 +96,13 @@ response <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, orde
                      response_classes = response_classes,
                      pos_class_supplied = !is.null(pos_class),
                      mean_all = mean_all)
+  }else{
+    res <- structure(res,
+                     target_name = col_names[1],
+                     grouping_name = col_names[2],
+                     mean_all = mean_all)
   }
+
   if (plot){
     print(plot_response(res, order_n = order_n))
   }
@@ -161,16 +167,11 @@ plot_response <- function(dt, order_n = FALSE, prop_lim  = NULL) {
 ci_add <- function(dt, conf_level, family) {
   if (family == "binomial"){
     binom <- binom::binom.wilson(dt$prop * dt$n, dt$n, conf.level = conf_level)
-    return(dplyr::mutate(dt,
-                         lo = binom[["lower"]],
-                         hi = binom[["upper"]])
-    )
+    return(dplyr::mutate(dt, lo = binom[["lower"]], hi = binom[["upper"]]))
   }
-  if (family == "gaussian"){
-    dplyr::mutate(dt,
+  dplyr::mutate(dt,
                   lo = ci_t(.data$mean_response, .data$sd, .data$n, ci = conf_level, lower = TRUE),
                   hi = ci_t(.data$mean_response, .data$sd, .data$n, ci = conf_level, lower = FALSE))
-  }
 }
 
 # t-distribution based confidence interval using summary statistics as input.
