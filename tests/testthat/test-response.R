@@ -55,7 +55,9 @@ test_that("response() handles inputs", {
   # next tests predictor var as factor. Not identical since "value" in returned df is factor
   #expect_identical(response(tb, "outcome", "groupf"), ref)
   tb2 <- tibble::add_row(tb, group = "c", outcome = 2)
-  expect_error(suppressMessages(response(tb2, "outcome", "group", plot = FALSE)), "Target variable must be binary.")
+  expect_error(suppressMessages(response(tb2, "outcome", "group", plot = FALSE, family = "binomial")),
+               "Target variable must be binary")
+  expect_silent(suppressMessages(response(tb2, "outcome", "group", plot = FALSE, family = "guess")))
 })
 
 test_that("response() output matches snapshot", {

@@ -33,7 +33,7 @@
 #' @export
 response <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, order_n = NULL,
                     conf_level = 0.95, pos_class = NULL, plot = TRUE,
-                    family = "binomial") {
+                    family = "guess") {
   if (!is.data.frame(dt)){
     stop("`dt` must be a data frame.", call. = FALSE)
   }
@@ -45,6 +45,7 @@ response <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, orde
     dt <- dplyr::filter(dt, !is.na(.data$target))
     message("There are NA values in target variable. These rows will be excluded from any calculations.")
   }
+  if (family == "guess") family <- guess_family(dt$target)
 
   if (family == "gaussian"){
     if (!(is.numeric(dt$target) | is.logical(dt$target))) {
@@ -53,7 +54,8 @@ response <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, orde
   }
 
   if (family == "binomial"){
-    dt <- dplyr::mutate(dt, target = prepare_binomial_response(dt$target, pos_class = pos_class))
+    target_new <- prepare_binomial_response(dt$target, pos_class = pos_class)
+    dt <- dplyr::mutate(dt, target = target_new)
     response_classes <- attr(dt$target, "response_classes")
     attr(dt$target, "response_classes") <- NULL
     if (is.null(pos_class)) message(pos_class_message(response_classes))
@@ -180,4 +182,15 @@ ci_t <- function (mean, sd, n, ci = 0.95, lower = TRUE){
   margin_error <- qt(quan, df = n - 1) * sd / sqrt(n)
   if (lower) return(mean - margin_error)
   mean + margin_error
+}
+
+guess_family <- function(x) {
+  if (length(na.omit(unique(x))) == 2L){
+    return("binomial")
+  }
+  if (is.numeric(x)){
+    return("gaussian")
+  }else{
+    stop("Target variable must be binary or numeric.", call. = FALSE)
+  }
 }
