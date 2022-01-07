@@ -1,19 +1,19 @@
-#' Confidence intervals for binary target variable by values of a discrete predictor
+#' Mean and confidence intervals of a response variable by a grouping variable
 #'
-#' In the `data`, one column is a response variable (`target_name`) and another is a predictor or
-#' grouping variable (`var_name`). A mean and confidence interval of the response for each value
+#' In the `data`, one column is a response variable (`response_col`) and another is a predictor or
+#' grouping variable (`group_col`). A mean and confidence interval of the response for each value
 #' of the predictor is calculated and returned in a data frame. The function most appropriate for
 #' factor predictors where grouping is more natural but will also work with other variable types.
 #'
-#' The target variable must be binary. To compute confidence intervals, values are treated as 0
-#' and 1 values. Which value corresponds to 1 (the "positive class") is controlled by the argument
-#' `pos_class`. If not supplied, the positive class will be the "greatest" value using natural
-#' ordering (level ordering if target is an ordered factor).
+#' The response variable must be binary. To compute confidence intervals, values are treated as either
+#' 0 or 1. The value given in the argument `pos_class` is treated as 1 (the "positive class").
+#' If `pos_class` is not supplied, the positive class will be the "greatest" of the two values
+#' using natural ordering (level ordering if target is an ordered factor).
 #'
 #' @return A summary data frame. By default a plot will also be printed as a side effect.
 #' @param dt A data frame.
-#' @param target_name Column to use as target variable. Column name (quoted or unquoted) or position.
-#' @param var_name Column to use as predictor variable. Column name (quoted or unquoted) or position.
+#' @param response_col Column to use as target variable. Column name (quoted or unquoted) or position.
+#' @param group_col Column to use as predictor variable. Column name (quoted or unquoted) or position.
 #' @param min_n Integer >= 1. Predictor levels with less than `min_n` observations are not displayed.
 #' @param show_all Logical. Defaults to `TRUE`. If `FALSE` will not show levels whose confidence interval
 #'   overlaps the mean response of all observations.
@@ -22,21 +22,21 @@
 #'   and orders by number of observations otherwise.
 #' @param conf_level Numeric in (0,1). Confidence level used for confidence intervals.
 #' @param pos_class Optional. Specify value in target to associate with class 1.
-#' @param plot Logical. If `TRUE`, a plot using `plot_reponse()` will be printed.
+#' @param plot Logical. If `TRUE`, a plot using `plot_response()` will be printed.
 #' @param family Distribution family to use for the response confidence interval. Either "binomial"
 #'   or "gaussian".
 #'
 #' @export
-response <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, order_n = NULL,
+response <- function(dt, response_col, group_col, min_n = 1, show_all = TRUE, order_n = NULL,
                     conf_level = 0.95, pos_class = NULL, plot = TRUE,
                     family = "guess") {
   if (!is.data.frame(dt)){
     stop("`dt` must be a data frame.", call. = FALSE)
   }
-  col_names <- names(dplyr::select(dt, {{ target_name }}, {{ var_name }})) # to save as strings
+  col_names <- names(dplyr::select(dt, {{ response_col }}, {{ group_col }})) # to save as strings
   dt <- dplyr::rename(dt,
-                      target = {{ target_name }},
-                      var = {{ var_name }})
+                      target = {{ response_col }},
+                      var = {{ group_col }})
   if (any(is.na(dt$target))){
     dt <- dplyr::filter(dt, !is.na(.data$target))
     message("There are NA values in target variable. These rows will be excluded from any calculations.")
@@ -89,14 +89,14 @@ response <- function(dt, target_name, var_name, min_n = 1, show_all = TRUE, orde
 
   if (family == "binomial"){
     res <- structure(res,
-                     target_name = col_names[1],
+                     response_name = col_names[1],
                      grouping_name = col_names[2],
                      response_classes = response_classes,
                      pos_class_supplied = !is.null(pos_class),
                      mean_all = mean_all)
   }else{
     res <- structure(res,
-                     target_name = col_names[1],
+                     response_name = col_names[1],
                      grouping_name = col_names[2],
                      mean_all = mean_all)
   }
@@ -131,7 +131,7 @@ plot_response <- function(data, order_n = FALSE, response_lim  = NULL) {
     ggplot2::coord_flip() +
     ggplot2::geom_hline(yintercept = mean_all, linetype = 2) +
     ggplot2::ylab("Mean Response") +
-    ggplot2::xlab(attr(data, "target_name")) +
+    ggplot2::xlab(attr(data, "response_name")) +
     ggplot2::theme(legend.position = "none") +
     ggplot2::scale_colour_manual(values = c("lo" = cols[1], "none" = cols[3], "hi" = cols[2])) +
     {if(all(!is.null(response_lim))) ggplot2::ylim(response_lim[1], response_lim[2])}
@@ -140,13 +140,13 @@ plot_response <- function(data, order_n = FALSE, response_lim  = NULL) {
 
 #' Prepare response vector when family is binomial
 #'
-#' Converts input to a logical vector with attribute recording which
+#' Converts input to a logical vector with an attribute recording which
 #' values in the original vector correspond to positive and negative
 #' classes (respectively `TRUE` and `FALSE` in the output).
 #'
 #' Used in `response()`.
 #'
-#' @param x Target variable vector.
+#' @param x Response variable vector.
 #' @param pos_class A value in `x` to use as the positive class.
 #' @noRd
 prepare_binomial_response <- function(x, pos_class = NULL) {

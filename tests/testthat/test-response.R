@@ -34,9 +34,12 @@ tb <- tibble::tibble(group = c(rep("a", 25), rep("b", 15), rep("c", 10)),
   dplyr::mutate(outc = ifelse(outb, "yes", "no"))
 ref <- suppressMessages(response(tb, "outcome", "group", plot = FALSE))
 
+test_that("plot_response works", {
+  expect_s3_class(plot_response(ref), "ggplot")
+})
+
 test_that("binom works", {
   expect_s3_class(ref, "data.frame")
-  #  expect_s3_class(suppressMessages(response(tb, "outcome", "group", return_plot = TRUE)), "ggplot")
   expect_identical(nrow(ref), length(unique(tb$group)))
   expect_true(all(ref$prop >= 0 & ref$prop <= 1))
   expect_true(all(ref$lo <= ref$prop))
@@ -71,7 +74,7 @@ test_that("response() output matches snapshot", {
   expect_true(all(c("pos_class_supplied", "response_classes", "mean_all") %in% names(attributes(tt))))
   expect_named(attributes(tt),
                c("pos_class_supplied", "response_classes", "mean_all", "class",
-                 "row.names", "names", "target_name", "grouping_name"),
+                 "row.names", "names", "response_name", "grouping_name"),
                ignore.order = TRUE)
   expect_snapshot_value(tt, style = "json2")
   expect_identical(response(df, y, x, pos_class = 1L, plot = FALSE, order_n = FALSE)[[1]],

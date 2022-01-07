@@ -2,12 +2,12 @@
 % Please edit documentation in R/response.R
 \name{response}
 \alias{response}
-\title{Confidence intervals for binary target variable by values of a discrete predictor}
+\title{Mean and confidence intervals of a response variable by a grouping variable}
 \usage{
 response(
   dt,
-  target_name,
-  var_name,
+  response_col,
+  group_col,
   min_n = 1,
   show_all = TRUE,
   order_n = NULL,
@@ -20,9 +20,9 @@ response(
 \arguments{
 \item{dt}{A data frame.}
 
-\item{target_name}{Column to use as target variable. Column name (quoted or unquoted) or position.}
+\item{response_col}{Column to use as target variable. Column name (quoted or unquoted) or position.}
 
-\item{var_name}{Column to use as predictor variable. Column name (quoted or unquoted) or position.}
+\item{group_col}{Column to use as predictor variable. Column name (quoted or unquoted) or position.}
 
 \item{min_n}{Integer >= 1. Predictor levels with less than \code{min_n} observations are not displayed.}
 
@@ -37,7 +37,7 @@ and orders by number of observations otherwise.}
 
 \item{pos_class}{Optional. Specify value in target to associate with class 1.}
 
-\item{plot}{Logical. If \code{TRUE}, a plot using \code{plot_reponse()} will be printed.}
+\item{plot}{Logical. If \code{TRUE}, a plot using \code{plot_response()} will be printed.}
 
 \item{family}{Distribution family to use for the response confidence interval. Either "binomial"
 or "gaussian".}
@@ -46,14 +46,14 @@ or "gaussian".}
 A summary data frame. By default a plot will also be printed as a side effect.
 }
 \description{
-In the \code{data}, one column is a response variable (\code{target_name}) and another is a predictor or
-grouping variable (\code{var_name}). A mean and confidence interval of the response for each value
+In the \code{data}, one column is a response variable (\code{response_col}) and another is a predictor or
+grouping variable (\code{group_col}). A mean and confidence interval of the response for each value
 of the predictor is calculated and returned in a data frame. The function most appropriate for
 factor predictors where grouping is more natural but will also work with other variable types.
 }
 \details{
-The target variable must be binary. To compute confidence intervals, values are treated as 0
-and 1 values. Which value corresponds to 1 (the "positive class") is controlled by the argument
-\code{pos_class}. If not supplied, the positive class will be the "greatest" value using natural
-ordering (level ordering if target is an ordered factor).
+The response variable must be binary. To compute confidence intervals, values are treated as either
+0 or 1. The value given in the argument \code{pos_class} is treated as 1 (the "positive class").
+If \code{pos_class} is not supplied, the positive class will be the "greatest" of the two values
+using natural ordering (level ordering if target is an ordered factor).
 }
