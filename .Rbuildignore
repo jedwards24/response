@@ -1,2 +1,4 @@
 ^response\.Rproj$
 ^\.Rproj\.user$
+^dev_code$
+^LICENSE\.md$

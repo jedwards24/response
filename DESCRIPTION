@@ -16,3 +16,14 @@ BugReports: https://github.com/jedwards24/response/issues
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Imports: 
+    purrr,
+    ggplot2,
+    dplyr,
+    tibble,
+    glue,
+    stats,
+    binom,
+    forcats,
+    rlang, 
+    magrittr
