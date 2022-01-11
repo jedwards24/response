@@ -4,6 +4,11 @@
 * check replacement of missing factor level in `var`
 * CIs for n < 2 groups
 * replace prop column with mean_response?
+* Colour blind friendly plot colours
+
+* Multiple grouping vars
+* Give grouping/response variables as a mutate e.g. response_var = weight / height. Might only work
+for grouoing vars if passed by ...
 
 ## Questions
 

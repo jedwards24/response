@@ -1,4 +1,4 @@
-#' Mean and confidence intervals of a response variable by a grouping variable
+#' Confidence intervals of a response variable by a grouping variable
 #'
 #' In the `data`, one column is a response variable (`response_col`) and another is a predictor or
 #' grouping variable (`group_col`). A mean and confidence interval of the response for each value
@@ -131,7 +131,7 @@ plot_response <- function(data, order_n = FALSE, response_lim  = NULL) {
     ggplot2::coord_flip() +
     ggplot2::geom_hline(yintercept = mean_all, linetype = 2) +
     ggplot2::ylab("Mean Response") +
-    ggplot2::xlab(attr(data, "response_name")) +
+    ggplot2::xlab(attr(data, "grouping_name")) +
     ggplot2::theme(legend.position = "none") +
     ggplot2::scale_colour_manual(values = c("lo" = cols[1], "none" = cols[3], "hi" = cols[2])) +
     {if(all(!is.null(response_lim))) ggplot2::ylim(response_lim[1], response_lim[2])}
